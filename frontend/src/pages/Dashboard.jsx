@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
-import { dashboardAPI } from '../services/api';
-import { Activity, TrendingUp, Package, AlertTriangle } from 'lucide-react';
+import { dashboardAPI, riskAlertAPI } from '../services/api';
+import { Activity, TrendingUp, Package, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import AdherenceChart from '../components/Dashboard/AdherenceChart';
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [riskStats, setRiskStats] = useState(null);
   
   useEffect(() => {
     loadDashboard();
+    loadRiskStats();
   }, []);
   
   const loadDashboard = async () => {
@@ -19,6 +22,15 @@ export default function Dashboard() {
       console.error('Error loading dashboard:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRiskStats = async () => {
+    try {
+      const response = await riskAlertAPI.getStats();
+      setRiskStats(response.data);
+    } catch (error) {
+      console.error('Error loading risk stats:', error);
     }
   };
   
@@ -82,6 +94,40 @@ export default function Dashboard() {
           );
         })}
       </div>
+
+      {/* Risk Alerts Banner */}
+      {riskStats && riskStats.total > 0 && (
+        <div className="bg-red-50 border-l-4 border-red-600 p-6 rounded-lg shadow mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <AlertTriangle className="w-8 h-8 text-red-600" />
+              <div>
+                <h2 className="text-xl font-bold text-red-800">
+                  {riskStats.total} Active Risk Alert{riskStats.total !== 1 ? 's' : ''}
+                </h2>
+                <p className="text-red-700">
+                  {riskStats.bySeverity.critical > 0 && (
+                    <span className="font-semibold">{riskStats.bySeverity.critical} Critical, </span>
+                  )}
+                  {riskStats.bySeverity.high > 0 && (
+                    <span>{riskStats.bySeverity.high} High, </span>
+                  )}
+                  {riskStats.bySeverity.medium > 0 && (
+                    <span>{riskStats.bySeverity.medium} Medium</span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/risk-alerts"
+              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              View Alerts
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Link>
+          </div>
+        </div>
+      )}
       
       {/* Today's Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">

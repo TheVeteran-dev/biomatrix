@@ -1,13 +1,33 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Pill, Calendar, Activity } from 'lucide-react';
+import { Home, Pill, Calendar, Activity, AlertTriangle, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { riskAlertAPI } from '../../services/api';
 
 export default function Layout({ children }) {
   const location = useLocation();
+  const [alertCount, setAlertCount] = useState(0);
+  
+  useEffect(() => {
+    loadAlertCount();
+    const interval = setInterval(loadAlertCount, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadAlertCount = async () => {
+    try {
+      const response = await riskAlertAPI.getStats();
+      setAlertCount(response.data.total);
+    } catch (error) {
+      console.error('Error loading alert count:', error);
+    }
+  };
   
   const navigation = [
     { name: 'Dashboard', path: '/dashboard', icon: Home },
     { name: 'Today', path: '/today', icon: Calendar },
     { name: 'Medicines', path: '/medicines', icon: Pill },
+    { name: 'Risk Alerts', path: '/risk-alerts', icon: AlertTriangle, badge: alertCount }, // NEW
+    { name: 'Profile', path: '/profile', icon: User }, // NEW
   ];
   
   return (
@@ -28,12 +48,19 @@ export default function Layout({ children }) {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition ${
+                className={`flex items-center justify-between px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition ${
                   isActive ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600' : ''
                 }`}
               >
-                <Icon className="w-5 h-5 mr-3" />
-                {item.name}
+                <div className="flex items-center">
+                  <Icon className="w-5 h-5 mr-3" />
+                  {item.name}
+                </div>
+                {item.badge > 0 && (
+                  <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}

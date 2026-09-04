@@ -16,7 +16,7 @@ const medicineSchema = new mongoose.Schema({
     enum: ['once_daily', 'twice_daily', 'thrice_daily', 'custom']
   },
   times: [{
-    type: String, // Format: "HH:MM"
+    type: String,
     required: true
   }],
   startDate: {
@@ -44,6 +44,34 @@ const medicineSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  // NEW FIELDS FOR RISK ALERTS
+  isCritical: {
+    type: Boolean,
+    default: false,
+    comment: 'Mark as critical if missing this medicine is dangerous'
+  },
+  category: {
+    type: String,
+    enum: ['antibiotic', 'painkiller', 'cardiac', 'diabetes', 'blood_pressure', 'vitamin', 'other'],
+    default: 'other'
+  },
+  interactsWith: [{
+    type: String,
+    comment: 'List of medicine names that interact with this medicine'
+  }],
+  contraindications: [{
+    type: String,
+    comment: 'Health conditions that contraindicate this medicine'
+  }],
+  maxDailyDoses: {
+    type: Number,
+    comment: 'Maximum doses allowed per day'
+  },
+  minimumGapHours: {
+    type: Number,
+    default: 4,
+    comment: 'Minimum hours between doses'
   }
 }, { timestamps: true });
 
